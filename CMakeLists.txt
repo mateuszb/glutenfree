@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 IF(${WIN32})
 ELSE()
-set(CMAKE_CXX_FLAGS "-gdwarf-4 -ggdb")
+set(CMAKE_CXX_FLAGS "-gdwarf-2 -ggdb")
 ENDIF()
 
 set(DEPENDENCY_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/dependencies)

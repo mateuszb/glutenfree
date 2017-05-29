@@ -184,7 +184,6 @@ HttpHandler::HandleEvent(
         defhdrs.emplace("Connection", "keep-alive");
     }
 
-    // XXX
     if (req["Accept-Encoding"].find("gzip") != string::npos) {
         gzip_supported = true;
     }
@@ -199,6 +198,8 @@ HttpHandler::HandleEvent(
     }
     else {
         const auto path = req.url().path();
+
+	clog << "Request for path " << path << endl;
         string payload;
 
         // step 1. analyze path through routing and dispatch accordingly

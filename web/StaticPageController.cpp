@@ -26,6 +26,8 @@ pair<HttpCode, string> StaticPageController::process(
 {
     auto rsrc = resources::load(resource);
     if (rsrc.empty()) {
+      cout << "resource " << resource << " doesn't exist" << endl;
+
         return { HttpCode::HTTP_NO_CONTENT, "" };
     }
 

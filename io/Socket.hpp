@@ -36,7 +36,6 @@ public:
     explicit Socket()
     {
         fd = ::socket(carrier::value, protocol::value, protocol::proto);
-        std::cout << "created socket with fd " << fd << std::endl;
     }
 
     explicit Socket(SOCKTYPE desc) : fd(desc) {}
@@ -131,7 +130,6 @@ public:
 
     ~Socket()
     {
-        std::cout << "~Socket() !!!" << std::endl;
         if (fd != -1) {
 #if defined _WIN32 || defined  _WIN64
             closesocket(fd);

@@ -98,14 +98,11 @@ uint32_t Dispatcher::HandleEvents(const uint32_t timeoutMs)
 
     auto events = demuxer->WaitForEvents();
 
-    cout << "Got " << events.size() << " events" << endl;
-
     for (auto& evt : events) {
         socket_type socketHandle;
         uint32_t eventMask;
         tie(eventMask, socketHandle) = evt;
 
-	cout << "fd " <<socketHandle << " mask " <<eventMask <<endl;
         if (toRemove.find(socketHandle) != toRemove.end()) {
             continue;
         }

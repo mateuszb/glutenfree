@@ -160,11 +160,6 @@ std::unique_ptr<URI> URI::make_uri(common::DisplacedArray<char>& arr)
 
     auto val = buf[state].str();
     switch (state) {
-    case scheme:
-	assert(!"oops");
-	ret->components[SCHEME] = val;
-	break;
-
     case host:
 	ret->components[HOST] = val;
 	break;
@@ -173,6 +168,9 @@ std::unique_ptr<URI> URI::make_uri(common::DisplacedArray<char>& arr)
 	ret->components[PORT] = val;
 	break;
 
+    case scheme:
+         // done processing input and still stuck on scheme?
+        // this is probably a path then...
     case path:
 	ret->components[PATH] = val;
 	break;

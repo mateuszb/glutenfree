@@ -37,25 +37,30 @@ bool IOHandler::HandleEvent(const uint32_t eventMask)
     bool ok = true;
     auto appHandler = static_pointer_cast<ApplicationHandler>(shared_from_this());
 
-    if (eventMask & EventType::Read) {
+    try {
+      if (eventMask & EventType::Read) {
         ok &= receive();
-    }
+      }
 
-    if (eventMask & EventType::Write) {
+      if (eventMask & EventType::Write) {
         ok &= transmitLoop();
-    }
+      }
 
-    if (eventMask & EventType::Close) {
+      if (eventMask & EventType::Close) {
         ok &= false;
-    }
+      }
 
-    if (eventMask & EventType::Error) {
+      if (eventMask & EventType::Error) {
         ok &= false;
-    }
+      }
 
 #if defined(_WIN32) || defined(_WIN64)
-    transmitLoop();
+      transmitLoop();
 #endif
+    } catch (exception& e) {
+      cerr << "Exception caught: " << e.what() << endl;
+      return false;
+    }
 
     return ok;
 }
@@ -83,10 +88,10 @@ bool IOHandler::receive(const size_t sizeHint)
         rxdata->resize(nread);
 
         auto handler = dynamic_cast<ApplicationHandler*>(this);
-        auto response = handler->HandleEvent(EventType::Read, *rxdata);
-        if (response != nullptr) {
-            transmit(std::move(response));
-        }
+	auto response = handler->HandleEvent(EventType::Read, *rxdata);
+	if (response != nullptr) {
+	  transmit(std::move(response));
+	}
     }
 
     if (rxCtx.overlapped.hEvent != nullptr) {
@@ -185,6 +190,8 @@ retry:
             cout << "RX EAGAIN || EWOULDBLOCK" << endl;
             return true;
         }
+
+	return false;
     }
 
     if (nread == 0) {
