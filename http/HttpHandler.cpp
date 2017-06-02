@@ -114,6 +114,29 @@ HttpHandler::HandleEvent(
                 full_hdr = true;
                 idx = 0;
                 crlf_count = 0;
+
+                auto thisHandle = IOHandler::GetHandle();
+                struct sockaddr_storage saddr;
+                socklen_t namlen = sizeof(saddr);
+
+                int tmp = getpeername(IOHandler::GetHandle(),
+                    reinterpret_cast<struct sockaddr*>(&saddr),
+                    &namlen);
+                vector<char> addrData;
+                void * src = nullptr;
+
+                if (saddr.ss_family == AF_INET) {
+                    src = &reinterpret_cast<sockaddr_in*>(&saddr)->sin_addr;
+                    addrData.resize(INET_ADDRSTRLEN);
+                }
+                else if (saddr.ss_family == AF_INET6) {
+                    src = &reinterpret_cast<sockaddr_in6*>(&saddr)->sin6_addr;
+                    addrData.resize(INET6_ADDRSTRLEN);
+                }
+
+                inet_ntop(saddr.ss_family, src, addrData.data(), addrData.size());
+
+                cout << "Originator: " << addrData.data() << endl;
                 break;
             }
         }
@@ -199,7 +222,7 @@ HttpHandler::HandleEvent(
     else {
         const auto path = req.url().path();
 
-	clog << "Request for path " << path << endl;
+        clog << "Request for path " << path << endl;
         string payload;
 
         // step 1. analyze path through routing and dispatch accordingly
@@ -290,7 +313,7 @@ HttpHandler::HandleEvent(
 
                 if (responseCode == HttpCode::HTTP_FOUND ||
                     responseCode == HttpCode::HTTP_MOVED_PERMANENTLY ||
-                    responseCode == HttpCode::HTTP_TEMPORARY_REDIRECT ) {
+                    responseCode == HttpCode::HTTP_TEMPORARY_REDIRECT) {
                     defhdrs.emplace("Location", responseData);
                 }
 
@@ -311,6 +334,7 @@ HttpHandler::HandleEvent(
                 string response;
                 auto ptr = reinterpret_cast<uint8_t*>(res->vaddr);
                 auto raw = string(ptr, ptr + res->size);
+
                 if (gzip_supported) {
                     auto compressed = gzip(raw);
                     defhdrs.emplace("Content-Encoding", "gzip");
@@ -355,14 +379,15 @@ const string http::make_header(
 {
     ostringstream oss;
 
+    oss << "HTTP/1.1 " << code << " " << reason << "\r\n"
+        << "Content-Length: " << content_size << "\r\n";
+
     for (auto&& val : headers) {
         oss << val.first << ": " << val.second << "\r\n";
     }
+    oss << "\r\n";
 
-    oss << "Content-Length: " << content_size << "\r\n";
-
-    const string hdr = "HTTP/1.1 " + to_string(code) + " " + reason + "\r\n" + oss.str() + "\r\n";
-    return hdr;
+    return oss.str();
 }
 
 unique_ptr<vector<uint8_t>> http::gzip(const string& input)

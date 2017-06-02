@@ -88,22 +88,23 @@ public:
 
 class HttpsRedirectorHandler : public io::ApplicationHandler {
 public:
-
     HttpsRedirectorHandler(
         const std::string& hostname,
         const io::net::DispatcherPtr& dispatcher,
         const io::net::SocketBasePtr& ptr)
-        : ApplicationHandler(dispatcher, ptr) {
+        : ApplicationHandler(dispatcher, ptr), targetHost(hostname) {
     }
 
     unique_ptr<vector<uint8_t>> HandleEvent(
         const uint32_t eventMask,
         const vector<uint8_t>& input) override {
 
+        ostringstream hostStream;
+        hostStream << "https://" << targetHost;
         multimap<string, string> defhdrs = {
-            { "Host", "dev.optimize.today" },
+            { "Host", targetHost },
             { "Connection", "close" },
-            { "Location", "https://dev.optimize.today:8443/"}
+            { "Location", hostStream.str() }
         };
 
         const auto hdr = make_header(
@@ -113,9 +114,11 @@ public:
             0);
         return make_unique<vector<uint8_t>>(hdr.cbegin(), hdr.cend());
     }
+private:
+    const string targetHost;
 };
 
-class HttpsRedirectorHandlerFactory{
+class HttpsRedirectorHandlerFactory {
 public:
     static io::ApplicationHandlerPtr Make(
         const std::string& hostname,
